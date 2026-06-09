@@ -4,7 +4,7 @@ Compile source notes in the Foundry vault into concept articles.
 
 ### Scope
 
-Scan `sources/` for source notes that haven't been fully compiled. A source is "un-compiled" if its title doesn't appear in any concept article's `Sources:` field across `wiki/`.
+Scan `sources/` for source notes that haven't been fully compiled. A source is "un-compiled" if its title doesn't appear in any concept article's `sources:` YAML list across `wiki/`. To check: grep `wiki/` recursively for `"[[<source-title>]]"` inside a `sources:` block.
 
 If `$ARGUMENTS` names a specific source note, concept, or theme, focus the compile run on that. Otherwise work through un-compiled sources oldest first.
 
@@ -13,21 +13,32 @@ If `$ARGUMENTS` names a specific source note, concept, or theme, focus the compi
 1. **Read the source note** in full, including Claude's notes at the bottom.
 2. **Scan existing concept articles** in `wiki/` for topical overlap. If a companion vault is configured, also check it for related first-person notes.
 3. **Decide**: extend an existing concept, or spin out a new one.
-   - **Extend** when the source adds a new example, counter-example, or nuance to an existing concept. Add the source to the `Sources:` line. Add a paragraph or bullet under **Evidence across sources** that cites the new source.
-   - **Spin out** when a distinct idea recurs across 2+ sources that doesn't fit existing concepts. A new concept article needs:
-     - Clear one-sentence answer to "What it is"
-     - One short paragraph on "Why it matters"
-     - Key points — sharp one-liners, claim-shaped (one per line)
-     - Evidence across sources — cite each source
-     - Open questions — real research gaps
-     - Prompts — essay-shaped prompts where the concept intersects existing notes (empty is fine)
-     - At least 2 `Related:` links to existing concepts. If zero exist, note why it's an island in the body (and expect the lint to flag it).
+   - **Extend** when the source adds a new example, counter-example, or nuance to an existing concept. Add the source to the `sources:` YAML list. Add a paragraph or bullet under **Evidence across sources** that cites the new source.
+   - **Spin out** when a distinct idea recurs across 2+ sources that doesn't fit existing concepts. A new concept article needs YAML frontmatter per CLAUDE.md:
+     - `tags:` — `type/concept`, appropriate `area/...`, and `keyword/...` tags (no `#` prefix)
+     - `date_created:` — today as ISO string
+     - `sources:` — YAML list of wikilinks to the source notes it synthesises
+     - `related:` — YAML list of `{page, rel}` objects. Minimum 2 entries. `rel` must be one of: `extends`, `contradicts`, `supersedes`, `see-also`. Use `contradicts` when sources genuinely disagree — do not collapse the tension into one reading. Use `see-also` as the default when no stronger relationship applies.
+
+     **Picking `rel` values:**
+     - `extends` — this concept builds on or deepens the related one
+     - `contradicts` — core claim is in genuine tension; name the disagreement explicitly in the body under a **Tensions** subheading
+     - `supersedes` — new evidence renders the related concept obsolete; note it in the log
+     - `see-also` — real relationship that doesn't fit the above (use as default)
+
+     Body sections: "What it is" > "Why it matters" > "Key points" > "Evidence across sources" > "Open questions" > "Prompts". If zero related concepts exist, note why it's an island in the body (expect lint to flag it).
+
 4. **If uncertain**: log the theme as a candidate in the Candidates section of `wiki/_meta/index.md` with a one-line rationale. Don't create speculative concepts from a single source — wait for cross-source signal.
+
+   **Primary-source exception.** If a source note has `primary: true` in its frontmatter, you may spin out a new concept article from it without waiting for a second source. At the top of the concept body, add:
+   > Single primary source — watch for corroboration.
+
+   Use this only for authoritative documents (official specifications, government publications, primary legal texts) where a second independent source may never meaningfully exist.
 
 ### Cross-vault synthesis
 
 If a companion vault is configured in CLAUDE.md, check it for notes on the same topic. If a relevant note exists:
-- Cite it in the concept's `Sources:` as `[[VaultName/Path/Note Title]]`
+- Add it to the concept's `sources:` YAML list as `"[[VaultName/Path/Note Title]]"`
 - Attribute in the body: *"In a note on X, the author argues…"*
 - Never copy verbatim — paraphrase.
 
