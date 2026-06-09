@@ -44,19 +44,31 @@ Special files in `wiki/_meta/`:
 
 ## Front-matter
 
-Plain key-value lines, not YAML. Blank line then `---` then body.
+YAML frontmatter delimited by `---`. Blank line after closing `---` then body.
 
-Note from @jameesy: This is very personal to the way I like to use Obsidian, and the way that I use tags across vaults. You can change to a different style here to suit however you are currently working.
+Note from @jameesy: This is very personal to the way I like to use Obsidian, and the way that I use tags across vaults. The format is now YAML — change the tag values or add fields to suit however you are currently working.
 
 **Source notes (`sources/`):**
-```
-Type: #type/source
-Area: #area/craft/ai
-Keyword: #keyword/knowledge-management #keyword/llms
-Date created: [[2026-04-14]]
-Source: https://example.com/article
-
+```yaml
 ---
+tags:
+  - type/source
+  - area/craft/ai
+  - keyword/knowledge-management
+  - keyword/llms
+date_created: 2026-04-13
+source: https://example.com/article
+source_hash: sha256:abc123def456...
+primary: false
+---
+```
+
+- `tags:` — all type/area/keyword tags as a YAML list. **No `#` prefix** — Obsidian adds it in the UI. Dataview queries use: `WHERE contains(tags, "type/source")`
+- `date_created:` — ISO date string (e.g. `2026-04-13`). No `[[` wikilink wrapping.
+- `source_hash:` — SHA-256 hex digest of the raw source content, computed once on ingest, never changed. Lint uses this to detect if the immutable source note body has drifted. Use `sha256:pending` for sources ingested before this field existed.
+- `primary: false` — set `true` for authoritative singletons (government publications, official plan documents, canonical specs). `primary: true` sources bypass the 2-source rule for concept promotion.
+
+Body:
 
 **Summary**
 3-5 sentences. Core claim.
@@ -66,19 +78,29 @@ Source: https://example.com/article
 
 **Claude's notes**
 One paragraph: what's interesting, where it connects, what it contradicts.
-```
 
 **Wiki pages — concepts (`wiki/`):**
-```
-Type: #type/concept
-Area: #area/craft/ai
-Keyword: #keyword/knowledge-management
-Date created: [[2026-04-14]]
-Sources: [[Source One]], [[Source Two]]
-Related: [[Concept A]], [[Concept B]]
-
+```yaml
+---
+tags:
+  - type/concept
+  - area/craft/ai
+  - keyword/knowledge-management
+date_created: 2026-04-13
+sources:
+  - "[[Source One]]"
+  - "[[Source Two]]"
+related:
+  - page: "[[Concept A]]"
+    rel: extends
+  - page: "[[Concept B]]"
+    rel: contradicts
 ---
 ```
+
+- `sources:` — YAML list of wikilinks to the source notes the concept synthesises
+- `related:` — YAML list of `{page, rel}` objects. Minimum 2 entries (or note in body why concept is an island). `rel` must be one of: `extends`, `contradicts`, `supersedes`, `see-also`. Use `contradicts` when sources genuinely disagree — do not collapse the tension.
+
 Body: `What it is` > `Why it matters` > `Key points` > `Evidence across sources` > `Open questions` > `Prompts`.
 
 **Voice for concepts.** The Foundry gives you a *foundation* for your own writing — not a finished essay. Favour sharp one-liners, evidence citations, and open questions over flowing prose. Key points should be pithy — one line each, claim-shaped. When in doubt, write less.
@@ -86,24 +108,29 @@ Body: `What it is` > `Why it matters` > `Key points` > `Evidence across sources`
 **Prompts.** Essay-shaped prompts where the concept intersects your existing notes or thinking. Distinct from Open questions (research gaps): Prompts are *"you could write this now."* One or two sentences each, pointed and specific. Empty is fine.
 
 **Wiki pages — queries:**
-```
-Type: #type/query
-Area: #area/craft/management
-Keyword: #keyword/leadership
-Date created: [[2026-04-14]]
-Question: the question asked
-
+```yaml
+---
+tags:
+  - type/query
+  - area/craft/management
+  - keyword/leadership
+date_created: 2026-04-14
+question: "the question asked"
 ---
 ```
 
 **Wiki pages — people:**
-```
-Type: #type/person
-Area: #area/craft/ai
-Keyword: #keyword/llms
-Date created: [[2026-04-14]]
-
+```yaml
 ---
+tags:
+  - type/person
+  - area/craft/ai
+  - keyword/llms
+date_created: 2026-04-14
+---
+```
+
+Body:
 
 One-line identifier. Topic description.
 
@@ -112,11 +139,12 @@ One-line identifier. Topic description.
 
 **Concepts they inform**
 - [[Concept Title]]
-```
 
 ---
 
 ## Tag taxonomy
+
+> Tags go in the `tags:` YAML list **without** the `#` prefix. Obsidian renders them with `#` in the UI. Dataview queries use `WHERE contains(tags, "type/source")`. The hierarchy is unchanged.
 
 Hierarchical sub-areas under Craft. Customise the top-level areas to match your life.
 
