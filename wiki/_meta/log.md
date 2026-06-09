@@ -1,8 +1,8 @@
-Type: #type/meta
-Area: #area/meta
-Keyword:
-Date created: [[2026-04-13]]
-
+---
+tags:
+  - type/meta
+  - area/meta
+date_created: 2026-04-13
 ---
 
 Append-only chronological record of all Foundry operations. Each entry starts with `## [YYYY-MM-DD] operation | Title` so the log is greppable: `grep "^## \[" wiki/_meta/log.md | tail -5`.

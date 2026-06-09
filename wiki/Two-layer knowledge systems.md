@@ -1,10 +1,15 @@
-Type: #type/concept
-Area: #area/craft/ai
-Keyword: #keyword/knowledge-management #keyword/llms #keyword/second-brain
-Date created: [[2026-04-13]]
-Sources: [[LLM Knowledge Bases (Karpathy)]], [[What Matters in the Age of AI Is Taste]]
-Related:
-
+---
+tags:
+  - type/concept
+  - area/craft/ai
+  - keyword/knowledge-management
+  - keyword/llms
+  - keyword/second-brain
+date_created: 2026-04-13
+sources:
+  - "[[LLM Knowledge Bases (Karpathy)]]"
+  - "[[What Matters in the Age of AI Is Taste]]"
+related: []
 ---
 
 **What it is**

@@ -1,9 +1,14 @@
-Type: #type/source
-Area: #area/craft/ai
-Keyword: #keyword/taste #keyword/knowledge-management #keyword/second-brain
-Date created: [[2026-04-14]]
-Source: https://sublimeinternet.substack.com/p/what-matters-in-the-age-of-ai-is
-
+---
+tags:
+  - type/source
+  - area/craft/ai
+  - keyword/taste
+  - keyword/knowledge-management
+  - keyword/second-brain
+date_created: 2026-04-14
+source: https://sublimeinternet.substack.com/p/what-matters-in-the-age-of-ai-is
+source_hash: sha256:pending
+primary: false
 ---
 
 **Summary**

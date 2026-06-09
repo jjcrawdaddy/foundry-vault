@@ -1,9 +1,15 @@
-Type: #type/source
-Area: #area/craft/ai
-Keyword: #keyword/knowledge-management #keyword/llms #keyword/obsidian #keyword/second-brain
-Date created: [[2026-04-13]]
-Source: https://x.com/karpathy/status/2039805659525644595
-
+---
+tags:
+  - type/source
+  - area/craft/ai
+  - keyword/knowledge-management
+  - keyword/llms
+  - keyword/obsidian
+  - keyword/second-brain
+date_created: 2026-04-13
+source: https://x.com/karpathy/status/2039805659525644595
+source_hash: sha256:pending
+primary: false
 ---
 
 **Summary**
