@@ -10,10 +10,18 @@ If `$ARGUMENTS` is empty, open `wiki/_meta/index.md` and pick the oldest entry i
 
 ### How to answer
 
-1. **Search in this order** (most distilled first):
-   - Concept articles in `wiki/` — these already synthesise across sources. Read every concept whose title, keywords, or `Related:` plausibly touches the question.
+1. **Query qmd first (if available).** Run a semantic search to surface the most relevant files before reading anything:
+
+   ```bash
+   qmd query "<the question>" 2>&1
+   ```
+
+   If qmd returns results, read those files first (they are pre-ranked by relevance). If qmd is not available or errors (e.g. `command not found`, Node module error), fall back to the manual scan below — log the fallback in the query report's Open gaps as: `qmd unavailable — used index scan`.
+
+2. **Then scan in this order** (most distilled first):
+   - Concept articles in `wiki/` — these already synthesise across sources. Read every concept whose title, keywords, or `related:` plausibly touches the question.
    - Source notes in `sources/` — for specific claims, quotes, and evidence.
-   - Prior query reports in `wiki/` (Type: #type/query) — queries compound.
+   - Prior query reports in `wiki/` (tags contains `type/query`) — queries compound.
    - The companion vault (if configured) — the author's own first-person writing. Read-only.
 
 2. **Cite every claim.** Every factual or interpretive sentence in the answer must trace back to a specific note via `[[Title]]` or `[[VaultName/Path/Title]]` wikilinks. If a claim has no source, either find one or drop it — don't invent evidence.

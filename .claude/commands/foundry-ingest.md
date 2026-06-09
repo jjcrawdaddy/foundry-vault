@@ -66,6 +66,16 @@ Also update the relevant sections of `wiki/_meta/index.md`:
 - Increment keyword counts
 - If a recurring theme appeared across 2+ sources, add it to Candidates for the compile loop to promote
 
+### After all items are ingested
+
+Run `qmd update` to keep the semantic index current:
+
+```bash
+qmd update 2>&1
+```
+
+If qmd errors or is unavailable, log the failure in `wiki/_meta/log.md` under the ingest entry as `qmd update failed: <error>` — do not block the ingest or treat it as fatal.
+
 ### Hard rules
 
 - Never write into the companion vault (if configured). Read only.

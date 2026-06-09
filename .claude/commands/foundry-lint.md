@@ -112,6 +112,65 @@ Flag:
 - `[[Concept]]` cites `[[Source Title]]` — source file not found in `sources/`
 - `[[Concept]]` cites `[[Source Title]]` — source note missing `source_hash` field
 
+#### 11. Linkding connectivity
+
+Check whether the Linkding integration is configured and healthy.
+
+1. **Config check**: Verify `LINKDING_URL` and `LINKDING_TOKEN` are set in the environment.
+   - If either is unset: flag as **Linkding not configured** (info, not an error — integration is optional).
+   - If both are set, proceed.
+
+2. **Connectivity check**: Ping the API with a minimal request:
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}" \
+     -H "Authorization: Token $LINKDING_TOKEN" \
+     "$LINKDING_URL/api/bookmarks/?limit=1"
+   ```
+   - `200` → healthy
+   - `401` → token invalid or expired
+   - `000` or other → host unreachable or URL misconfigured
+
+3. **Pending bookmarks**: If healthy, count bookmarks tagged `foundry` or `foundry-primary`:
+   ```bash
+   curl -s \
+     -H "Authorization: Token $LINKDING_TOKEN" \
+     "$LINKDING_URL/api/bookmarks/?tag=foundry&limit=1" | python3 -c "import sys,json; print(json.load(sys.stdin)['count'])"
+   ```
+   Report the count. Zero is fine. Non-zero means `/foundry-sync` has work waiting.
+
+Report format:
+- `Linkding not configured` — LINKDING_URL or LINKDING_TOKEN not set
+- `Linkding: ✓ reachable — N bookmarks pending sync`
+- `Linkding: ✗ auth failed (HTTP 401)`
+- `Linkding: ✗ unreachable (HTTP 000)`
+
+#### 12. qmd index status
+
+Check whether qmd is available and its index covers the vault.
+
+1. **Availability check**:
+   ```bash
+   qmd status 2>&1
+   ```
+   - If `command not found`: flag as **qmd not in PATH**.
+   - If exits with a Node.js module error (e.g. `ERR_DLOPEN_FAILED`, `NODE_MODULE_VERSION`): flag as **qmd broken — native module mismatch**. Include the fix: `cd $(npm root -g)/@tobilu/qmd && npm rebuild`.
+   - If exits cleanly: qmd is available.
+
+2. **Collection check**: Verify the vault root is registered as a qmd collection:
+   ```bash
+   qmd collection list 2>&1
+   ```
+   If no collection covers the vault path, flag as **Vault not indexed by qmd** — suggest `qmd collection add foundry <vault-path> && qmd embed`.
+
+3. **Index freshness**: Compare the `qmd status` last-updated timestamp to the newest file in `sources/` and `wiki/`. If any file is newer than the last index update, flag as **qmd index stale — run `qmd update`**.
+
+Report format:
+- `qmd not in PATH`
+- `qmd broken — native module mismatch (run: cd $(npm root -g)/@tobilu/qmd && npm rebuild)`
+- `qmd: ✓ available, vault indexed, index current`
+- `qmd: ✓ available — index stale (N files newer than last update)`
+- `qmd: ✓ available — vault not registered as a collection`
+
 ### Writing the report
 
 Overwrite `wiki/_meta/health.md` entirely. Preserve the existing front-matter block:
@@ -134,7 +193,7 @@ Then write each section. Keep the report scannable:
 
 End the Stats section with `- **Last lint run:** YYYY-MM-DD` using today's date.
 
-The report must include sections for all 10 checks. Sections 8–10 template:
+The report must include sections for all 12 checks. Sections 8–12 template:
 
 ```
 #### 8. Source hash drift
@@ -145,6 +204,12 @@ The report must include sections for all 10 checks. Sections 8–10 template:
 
 #### 10. Citation integrity
 - _(clean)_
+
+#### 11. Linkding connectivity
+- _(not configured)_
+
+#### 12. qmd index status
+- _(unavailable)_
 ```
 
 ### Logging
@@ -159,6 +224,8 @@ Append to `wiki/_meta/log.md`:
 - Hash drift: N (pending: N, mismatch: N)
 - Relation vocab violations: N
 - Citation integrity failures: N
+- Linkding: <reachable / not configured / error>
+- qmd: <available+current / stale / broken / unavailable>
 ```
 
 ### Final summary to print

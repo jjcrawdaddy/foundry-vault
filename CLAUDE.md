@@ -15,6 +15,39 @@ One-way read, cross-linkable. That's the contract. If you don't have a companion
 
 ---
 
+## Optional integrations
+
+### Linkding
+
+Set these environment variables before running any Foundry command:
+
+```
+LINKDING_URL=https://your-linkding-instance.com   # no trailing slash
+LINKDING_TOKEN=your-api-token
+```
+
+Tag bookmarks in Linkding to queue them for the Foundry:
+- `foundry` — queue for ingest (cleared from the tag after sync)
+- `foundry-primary` — queue for ingest AND set `primary: true` on the source note
+
+`/foundry-sync` fetches all `foundry`-tagged bookmarks via the Linkding REST API, writes inbox stubs, and removes the `foundry` tag so each bookmark is only processed once. Full text is fetched during the subsequent `/foundry-ingest` run.
+
+If `LINKDING_URL` or `LINKDING_TOKEN` are not set, `/foundry-sync` and the Linkding healthcheck in `/foundry-lint` will skip gracefully and report the omission.
+
+### qmd
+
+qmd provides semantic search over the vault. After every `/foundry-ingest` or `/foundry-compile` run, Foundry triggers `qmd update` to keep the index current. `/foundry-ask` queries qmd first before falling back to index scanning.
+
+The vault must be registered as a qmd collection before first use:
+```bash
+qmd collection add foundry /path/to/this/vault
+qmd embed
+```
+
+If `qmd` is not in PATH or its index is missing, `/foundry-ask` falls back to index scanning and `/foundry-lint` reports the gap.
+
+---
+
 ## Directory structure
 
 Three layers, following the Karpathy wiki pattern:
@@ -216,9 +249,13 @@ Findings with 2+ sources feed back to Candidates. Open gaps feed to Open Questio
 
 Won't do: write into your companion vault, invent citations, pad thin answers.
 
+### Sync (`/foundry-sync`)
+
+Pull queued bookmarks from Linkding into `inbox/` as URL stubs. Requires `LINKDING_URL` and `LINKDING_TOKEN` env vars. No-ops cleanly if either is unset.
+
 ### Lint (`/foundry-lint`)
 
-Health-check the whole vault. Overwrite `wiki/_meta/health.md` with: Stats, Orphans, Candidates needing attention, Keyword drift.
+Health-check the whole vault. Overwrite `wiki/_meta/health.md` with: Stats, Orphans, Candidates needing attention, Keyword drift, Linkding connectivity, qmd index status.
 
 ---
 

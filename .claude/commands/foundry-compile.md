@@ -59,6 +59,16 @@ End with a short summary printed to the user:
 - Existing concepts extended (titles)
 - Candidates flagged (titles + reason)
 
+### After compile is complete
+
+Run `qmd update` to index newly created or extended concept articles:
+
+```bash
+qmd update 2>&1
+```
+
+If qmd errors or is unavailable, log `qmd update failed: <error>` in the compile log entry — do not treat it as fatal.
+
 ### Hard rules
 
 - Never write into the companion vault (if configured).
