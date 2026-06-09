@@ -14,19 +14,42 @@ Ingest raw material into the Foundry vault.
 
 ### For each item
 
-1. **Normalise into a source note** at `sources/<Title>.md`. Title is Title Case of the source.
-2. **Fill front-matter** per CLAUDE.md:
-   - `Type: #type/source`
-   - `Area:` — use your best judgment (e.g. `#area/craft/<subarea>` or another top-level area from the taxonomy)
-   - `Keyword:` — **read the Keywords section of `wiki/_meta/index.md` first**. Reuse existing keywords. If adding a new one, register it there with a one-line definition.
-   - `Date created: [[YYYY-MM-DD]]` — today
-   - `Source:` — URL or canonical reference
-3. **Write a concise summary** — what's the source saying in 3-5 sentences? What's the core claim?
-4. **Extract key points** as a bulleted list — 5-10 items maximum. Be tight.
-5. **Add Claude's notes** — one short paragraph on what's interesting, where it connects, what it contradicts. This is where the compile loop will look later.
-6. **Create a people page** if the source has an author and no page exists in `wiki/` yet. Keep it thin — a connector node, not an essay. See CLAUDE.md for the three-tier rule.
-7. **Cross-reference the companion vault** (if one is configured in CLAUDE.md): scan for notes on the same topic. If any match, mention them in Claude's notes using `[[VaultName/Path/Title]]` style links. Never write into the companion vault.
-8. **Clear the inbox**: remove the original once the source note is written.
+1. **Idempotency check.** Before creating a source note, compute the SHA-256 of the source content (full text before summarisation):
+   ```bash
+   printf '%s' "<source_text>" | shasum -a 256
+   ```
+   Grep `sources/` for any note already containing that hash value. If a match exists, skip and log `already ingested: <matched title>`. Do not create a duplicate.
+
+2. **Normalise into a source note** at `sources/<Title>.md`. Title is Title Case of the source.
+
+3. **Fill front-matter** per CLAUDE.md. Write valid YAML between `---` delimiters. Required fields:
+   - `tags:` — YAML list. Include `type/source`, the appropriate `area/...`, and all relevant `keyword/...` tags (**no `#` prefix** — just `type/source`, `area/craft/ai`, etc.)
+   - `date_created:` — today as ISO string (e.g. `2026-06-09`)
+   - `source:` — URL or canonical reference
+   - `source_hash:` — see next step
+   - `primary:` — `false` by default; see step 6
+
+   **Read the Keywords section of `wiki/_meta/index.md` first.** Reuse existing keywords. If adding a new one, register it there with a one-line definition.
+
+4. **Compute `source_hash`.** Use the same content you hashed in step 1:
+   ```bash
+   printf '%s' "<source_text>" | shasum -a 256
+   ```
+   Store the result as `source_hash: sha256:<hexdigest>`. This fingerprint is written once on creation and never updated. Lint uses it to detect if the immutable source note body has been edited after ingest.
+
+5. **Write a concise summary** — what's the source saying in 3-5 sentences? What's the core claim?
+
+6. **Extract key points** as a bulleted list — 5-10 items maximum. Be tight.
+
+7. **Add Claude's notes** — one short paragraph on what's interesting, where it connects, what it contradicts. This is where the compile loop will look later.
+
+8. **Create a people page** if the source has an author and no page exists in `wiki/` yet. Keep it thin — a connector node, not an essay. See CLAUDE.md for the three-tier rule.
+
+   **Set `primary: true`** if the source is an authoritative singleton — a government publication, official plan document, canonical spec — rather than commentary or a secondary account. Sources with `primary: true` bypass the 2-source rule in the compile loop and can seed a concept article alone.
+
+9. **Cross-reference the companion vault** (if one is configured in CLAUDE.md): scan for notes on the same topic. If any match, mention them in Claude's notes using `[[VaultName/Path/Title]]` style links. Never write into the companion vault.
+
+10. **Clear the inbox**: remove the original once the source note is written.
 
 ### Logging
 
