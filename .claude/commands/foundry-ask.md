@@ -28,13 +28,14 @@ Write to `wiki/YYYY-MM-DD-<question-slug>.md`. Slug the question — kebab-case,
 
 Front-matter:
 
-```
-Type: #type/query
-Area: #area/...
-Keyword: #keyword/...
-Date created: [[YYYY-MM-DD]]
-Question: <the user's exact question>
-
+```yaml
+---
+tags:
+  - type/query
+  - area/...
+  - keyword/...
+date_created: YYYY-MM-DD
+question: "<the user's exact question>"
 ---
 ```
 
