@@ -183,6 +183,12 @@ This template ships with two example sources and one example concept to show the
 
 Delete these and clear `wiki/_meta/index.md` once you've seen how they work, or keep them as seeds for your own vault.
 
+Dump anything — different subjects, different formats, no need to organise by topic first. Karpathy's original design is explicitly a single vault for everything you find interesting.
+
+The vault handles the sorting: each source gets its own note in `sources/`, and concept articles in `wiki/` only crystallise when a theme recurs across two independent sources. So unrelated topics just sit as source notes until enough cross-source signal accumulates to warrant a page. You might have 10 sources on retirement planning and 3 on soil science — they stay separate, each building its own candidate pool and eventual concept graph.
+
+The one thing that does require thought is the `#area/` tag on each source. That's how you segment your reading life — `area/finances`, `area/garden`, `area/craft/ai`, whatever fits. The taxonomy is yours to define in `CLAUDE.md`. The keyword layer beneath it is free-form and self-organising. Everything else is automatic.
+
 ---
 
 ## Schema
