@@ -4,14 +4,18 @@ This is an autonomous knowledge vault maintained by Claude. It follows the Karpa
 
 ---
 
-## Companion vault (optional)
+## Companion vault
 
-If you keep a personal vault (a commonplace, Zettelkasten, or notes folder), you can link it alongside this one. The contract:
+**Name:** JAC
+**Path:** `/Users/pops/Library/Mobile Documents/iCloud~md~obsidian/Documents/JAC`
+**Access:** read-only
 
-- **Your vault** — read-only for Claude. Never write, edit, move, or delete anything there. Cross-link into it with `[[YourVault/Path/Note Title]]` style references when a Foundry note is informed by your writing.
+The contract:
+
+- **JAC** — read-only for Claude. Never write, edit, move, or delete anything there. When a Foundry note is informed by content in JAC, cross-link using `[[JAC/Note Title]]` wikilinks (filename without extension, no path prefix needed if the title is unique within JAC).
 - **Foundry** — Claude writes, maintains, reorganises. You read, query, and occasionally correct.
 
-One-way read, cross-linkable. That's the contract. If you don't have a companion vault, Foundry works fine standalone.
+When cross-referencing JAC content: read the file at its full filesystem path, paraphrase (never copy verbatim), and attribute as *"In a note on X…"*. Do not follow `obsidian://` URIs — resolve them to the filesystem path instead: `obsidian://open?vault=JAC&file=Some%20Title` → `/Users/pops/Library/Mobile Documents/iCloud~md~obsidian/Documents/JAC/Some Title.md`.
 
 ---
 
