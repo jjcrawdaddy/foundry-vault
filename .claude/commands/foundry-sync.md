@@ -21,34 +21,41 @@ If either is unset, stop and tell the user what to set. Do not attempt API calls
 
 ### Fetch queued bookmarks
 
-Call the Linkding REST API to list all bookmarks tagged `foundry`:
+**The Linkding API has NO `tag=` parameter — it silently ignores unknown parameters and returns ALL bookmarks.** Tag filtering uses the `q` search parameter with a URL-encoded `#` prefix (`%23`):
 
 ```bash
 curl -s \
   -H "Authorization: Token $LINKDING_TOKEN" \
-  "$LINKDING_URL/api/bookmarks/?tag=foundry&limit=100"
+  "$LINKDING_URL/api/bookmarks/?q=%23foundry&limit=100"
 ```
 
-The response is a JSON object: `{"count": N, "results": [...]}`. Each result has:
+The response is a JSON object: `{"count": N, "results": [...], "next": <url or null>}`. Each result has:
 - `id` — numeric bookmark ID
 - `url` — the URL to ingest
 - `title` — page title (may be empty)
 - `description` — user's notes on the bookmark (may be empty)
 - `tag_names` — array of all tags on this bookmark
 
-Also fetch bookmarks tagged `foundry-primary` (these will be marked `primary: true`):
+If `next` is non-null, follow it for additional pages.
+
+Also fetch bookmarks tagged `foundry-primary`:
 
 ```bash
 curl -s \
   -H "Authorization: Token $LINKDING_TOKEN" \
-  "$LINKDING_URL/api/bookmarks/?tag=foundry-primary&limit=100"
+  "$LINKDING_URL/api/bookmarks/?q=%23foundry-primary&limit=100"
 ```
 
-Merge the two result lists, deduplicating by `id`. Track which IDs came from `foundry-primary`.
+Merge the two result lists, deduplicating by `id`.
 
-### For each bookmark
+**Sanity gate (mandatory).** Before writing any stubs:
 
-1. **Determine `primary`**: `true` if this bookmark had the `foundry-primary` tag, `false` otherwise.
+1. Fetch the total bookmark count (`?limit=1`, read `count`). If the filtered result count equals the total count and the total is greater than ~20, the filter is almost certainly not working — **stop and report, write nothing**.
+2. For every bookmark in the merged list, verify `tag_names` actually contains `foundry` or `foundry-primary`. **Discard any that don't** — they are false positives from search matching (e.g. the word "foundry" in a title). Never trust the query alone; the tag list on the bookmark itself is the source of truth.
+
+### For each verified bookmark
+
+1. **Determine `primary`**: `true` if the bookmark's own `tag_names` contains `foundry-primary`, `false` otherwise. (Use `tag_names`, not which query returned it.)
 
 2. **Write an inbox stub** at `inbox/<slug>.md`. Slug the title (or URL hostname if title is empty) to kebab-case, max 8 words. File content:
 

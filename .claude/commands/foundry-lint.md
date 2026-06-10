@@ -136,11 +136,11 @@ Check whether the Linkding integration is configured and healthy.
    - `401` → token invalid or expired
    - `000` or other → host unreachable or URL misconfigured
 
-3. **Pending bookmarks**: If healthy, count bookmarks tagged `foundry` or `foundry-primary`:
+3. **Pending bookmarks**: If healthy, count bookmarks tagged `foundry` or `foundry-primary`. Note: the Linkding API has no `tag=` parameter — use the `q` search parameter with URL-encoded `#` (`%23`):
    ```bash
    curl -s \
      -H "Authorization: Token $LINKDING_TOKEN" \
-     "$LINKDING_URL/api/bookmarks/?tag=foundry&limit=1" | python3 -c "import sys,json; print(json.load(sys.stdin)['count'])"
+     "$LINKDING_URL/api/bookmarks/?q=%23foundry&limit=1" | python3 -c "import sys,json; print(json.load(sys.stdin)['count'])"
    ```
    Report the count. Zero is fine. Non-zero means `/foundry-sync` has work waiting.
 
