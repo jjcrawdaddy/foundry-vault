@@ -8,7 +8,10 @@ Ingest raw material into the Foundry vault.
    - Raw `.md` clippings from Obsidian Web Clipper
    - PDFs — extract text
    - Plain URLs in a `.md` file — fetch them
+   - `obsidian://open?vault=JAC&file=<encoded-title>` links — resolve to a JAC file and read it (see below)
    - Pasted text — treat as an article
+
+**Resolving `obsidian://` links.** If the inbox file contains a link of the form `obsidian://open?vault=JAC&file=<encoded-title>`, resolve it to the companion vault filesystem path per CLAUDE.md: URL-decode the `file=` parameter and read the file at `<JAC path>/<decoded title>.md`. Treat the content of that JAC note as the source material. The source note in `sources/` should cite the original with `source: "[[JAC/<decoded title>]]"` (not a web URL). The JAC file is never modified.
 
 2. If `$ARGUMENTS` contains a URL or path, ingest that specifically instead of scanning the inbox.
 
