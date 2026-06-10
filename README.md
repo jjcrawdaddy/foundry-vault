@@ -8,14 +8,16 @@ Based on [Andrej Karpathy's LLM wiki pattern](https://x.com/karpathy/status/2039
 
 ## Quick start
 
-1. **Clone this repo** and open it in [Obsidian](https://obsidian.md)
+1. **Clone this repo** and open the folder as a vault in [Obsidian](https://obsidian.md)
 2. **Install Claude Code** — [claude.ai/code](https://claude.ai/code)
-3. **Drop something into `inbox/`** — a URL, a web clipping (via [Obsidian Web Clipper](https://obsidian.md/clipper)), a PDF, or pasted text
+3. **Drop something into `inbox/`** — a URL, a web clipping (via [Obsidian Web Clipper](https://obsidian.md/clipper)), a PDF, pasted text, or an `obsidian://` link to a note in your personal vault
 4. **Run `/foundry-ingest`** — Claude processes everything in the inbox into clean source notes
 5. **Run `/foundry-compile`** — Claude scans for un-compiled sources and builds concept articles when themes recur across 2+ sources
 6. **Run `/foundry-ask`** followed by a question — Claude researches your question across the vault and writes a report
 
 That's it. Drop, ingest, compile. The vault grows itself.
+
+The commands shell out to `curl`, `shasum`, `python3`, and (optionally) `qmd` — expect a few one-time permission prompts from Claude Code on first run.
 
 ---
 
@@ -33,11 +35,23 @@ That's it. Drop, ingest, compile. The vault grows itself.
 
 You curate what goes in. Claude writes and maintains the derived layer. The separation matters — your taste decides what's worth keeping; Claude does the synthesis work that humans can't sustain at scale.
 
+### Mix anything
+
+Dump unrelated topics freely — different subjects, different formats, no need to organise by topic first. Karpathy's original design is explicitly a single vault for everything you find interesting.
+
+The vault handles the sorting: each source gets its own note in `sources/`, and concept articles in `wiki/` only crystallise when a theme recurs across two independent sources. Unrelated topics just sit as source notes until enough cross-source signal accumulates to warrant a page. You might have 10 sources on retirement planning and 3 on soil science — they stay separate, each building its own candidate pool and eventual concept graph.
+
+The one thing that does require thought is the `#area/` tag on each source. That's how you segment your reading life — `area/finances`, `area/garden`, `area/craft/ai`, whatever fits. The taxonomy is yours to define in `CLAUDE.md`. The keyword layer beneath it is free-form and self-organising. Everything else is automatic.
+
 ### The 2-source rule
 
 Claude won't create a concept article from a single source. Themes are logged as **candidates** in `wiki/_meta/index.md` until a second independent source confirms the pattern. This prevents the wiki from filling up with speculative one-offs.
 
-**Exception:** sources tagged `primary: true` (government publications, official plan documents, canonical specs) can seed a concept article alone. See [Authoritative sources](#authoritative-sources-primary-flag) below.
+### Authoritative sources (primary flag)
+
+The exception to the 2-source rule. Some sources are authoritative singletons — an official plan document, an IRS publication, a canonical spec — where waiting for a "second independent source" doesn't make sense. Mark these `primary: true` (via the `foundry-primary` tag in Linkding, or manually in the inbox stub) and Claude promotes them to a concept article immediately rather than waiting.
+
+The concept article will include a notice: `> Single primary source — watch for corroboration.`
 
 ### What compounds
 
@@ -90,7 +104,7 @@ Tag bookmarks in Linkding to queue them for the Foundry:
 | Tag | Effect |
 |-----|--------|
 | `foundry` | Queue for ingest. Tag is removed after `/foundry-sync` so the bookmark is only processed once. |
-| `foundry-primary` | Queue for ingest AND mark the source as authoritative (sets `primary: true`). See [Authoritative sources](#authoritative-sources-primary-flag). |
+| `foundry-primary` | Queue for ingest AND mark the source as authoritative (sets `primary: true` — see Authoritative sources above). |
 
 All other tags on the bookmark are preserved. Only `foundry` and `foundry-primary` are stripped on sync.
 
@@ -101,13 +115,13 @@ All other tags on the bookmark are preserved. Only `foundry` and `foundry-primar
 /foundry-ingest      # process inbox stubs into source notes (fetches full text)
 ```
 
-Sync writes a minimal stub to `inbox/` — just the URL, title, and your Linkding notes. Full text is fetched during ingest, which also computes the source hash.
+Sync writes a minimal stub to `inbox/` — just the URL, title, and your Linkding notes. Full text is fetched during ingest, which also computes content hashes for provenance and duplicate detection.
 
 ---
 
 ## qmd integration (optional)
 
-[qmd](https://github.com/tobilu/qmd) provides semantic (vector + BM25) search over the vault. `/foundry-ask` queries qmd first to surface relevant files before falling back to index scanning — this matters once your vault grows past ~50 source notes.
+[qmd](https://www.npmjs.com/package/@tobilu/qmd) provides semantic (vector + BM25) search over the vault. `/foundry-ask` queries qmd first to surface relevant files before falling back to index scanning — this matters once your vault grows past ~50 source notes.
 
 ### Setup
 
@@ -148,17 +162,11 @@ Or run `/foundry-lint` — Check 12 reports qmd availability, collection registr
 
 ---
 
-## Authoritative sources (primary flag)
-
-Some sources are authoritative singletons — an official plan document, an IRS publication, a canonical spec — where waiting for a "second independent source" doesn't make sense. Tag these `foundry-primary` in Linkding (or set `primary: true` manually in the inbox stub) and Claude will promote them to a concept article immediately rather than waiting.
-
-The concept article will include a notice: `> Single primary source — watch for corroboration.`
-
----
-
 ## Companion vault (optional)
 
-If you already keep personal notes (a commonplace, Zettelkasten, or notes folder), you can point Claude at it as a read-only companion. Claude will cross-reference your notes when compiling but never write into them. See `CLAUDE.md` for setup.
+If you already keep personal notes (a commonplace, Zettelkasten, or notes folder), you can point Claude at it as a read-only companion. Claude will cross-reference your notes when compiling but never write into them. Configure the vault name and path in `CLAUDE.md`.
+
+Once configured, you can also **ingest your own notes**: copy an Obsidian link to any note in your personal vault (right-click → Copy Obsidian URL, giving something like `obsidian://open?vault=MyVault&file=Some%20Note`), paste it into a file in `inbox/`, and run `/foundry-ingest`. Claude resolves the link to the underlying file, reads it, and creates a source note citing your original — without ever modifying it. Your own thinking enters the synthesis pipeline alongside external sources.
 
 ---
 
@@ -166,28 +174,18 @@ If you already keep personal notes (a commonplace, Zettelkasten, or notes folder
 
 - **Areas**: Edit the `#area/` taxonomy in `CLAUDE.md` to match your interests
 - **Keywords**: Managed in `wiki/_meta/index.md` — add new ones as your reading grows
-- **Obsidian theme**: The `.obsidian/` config is included with a clean setup. Swap themes or plugins as you like
+- **Models**: Each command pins a model tier in its frontmatter (`.claude/commands/*.md`) — haiku for mechanical work (sync, lint), sonnet for summarisation (ingest, ask), your default model for synthesis (compile). Change the `model:` field to re-tier
+- **Obsidian theme**: The `.obsidian/` folder ships with a sensible default setup. Swap themes or plugins as you like
 - **Voice**: Concept articles are written as sharp foundations for *your* writing, not finished essays. Adjust the voice instructions in `CLAUDE.md` if you want a different tone
 - **Dataview**: Frontmatter uses standard YAML, so Dataview queries work out of the box. Example: `TABLE date_created FROM "sources" WHERE contains(tags, "type/source") SORT date_created DESC`
 
 ---
 
-## What's included
+## Starting fresh
 
-This template ships with two example sources and one example concept to show the structure:
+This vault starts empty: a blank `sources/`, a blank `wiki/`, and a skeleton catalog in `wiki/_meta/index.md`. The first few ingests will feel underwhelming — single sources sitting alone, no concepts yet. That's by design. Concepts crystallise from cross-source signal, and signal takes a handful of sources to accumulate. Drop things in as you read; run `/foundry-compile` occasionally; the graph emerges.
 
-- `sources/LLM Knowledge Bases (Karpathy).md` — the post that inspired this vault pattern
-- `sources/What Matters in the Age of AI Is Taste.md` — on taste as the human differentiator in AI-augmented work
-- `wiki/Two-layer knowledge systems.md` — a concept article compiled from both sources
-- `wiki/Andrej Karpathy.md` — an example people page
-
-Delete these and clear `wiki/_meta/index.md` once you've seen how they work, or keep them as seeds for your own vault.
-
-Dump anything — different subjects, different formats, no need to organise by topic first. Karpathy's original design is explicitly a single vault for everything you find interesting.
-
-The vault handles the sorting: each source gets its own note in `sources/`, and concept articles in `wiki/` only crystallise when a theme recurs across two independent sources. So unrelated topics just sit as source notes until enough cross-source signal accumulates to warrant a page. You might have 10 sources on retirement planning and 3 on soil science — they stay separate, each building its own candidate pool and eventual concept graph.
-
-The one thing that does require thought is the `#area/` tag on each source. That's how you segment your reading life — `area/finances`, `area/garden`, `area/craft/ai`, whatever fits. The taxonomy is yours to define in `CLAUDE.md`. The keyword layer beneath it is free-form and self-organising. Everything else is automatic.
+If you want to see the structure populated before committing your own material, ingest two or three articles on a topic you know well and run the full pipeline once.
 
 ---
 
