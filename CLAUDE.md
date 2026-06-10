@@ -96,14 +96,21 @@ tags:
 date_created: 2026-04-13
 source: https://example.com/article
 source_hash: sha256:abc123def456...
+note_hash: sha256:789fed654cba...
 primary: false
 ---
 ```
 
 - `tags:` — all type/area/keyword tags as a YAML list. **No `#` prefix** — Obsidian adds it in the UI. Dataview queries use: `WHERE contains(tags, "type/source")`
 - `date_created:` — ISO date string (e.g. `2026-04-13`). No `[[` wikilink wrapping.
-- `source_hash:` — SHA-256 hex digest of the raw source content, computed once on ingest, never changed. Lint uses this to detect if the immutable source note body has drifted. Use `sha256:pending` for sources ingested before this field existed.
+- `source_hash:` — SHA-256 of the **raw source content** (the original article/PDF text, before summarisation). Computed once on ingest, never changed. Used by the ingest idempotency check ("have I seen this source before?") and as a provenance record. Use `sha256:pending` when the raw content is unavailable (e.g. sources ingested before this field existed).
+- `note_hash:` — SHA-256 of the **note body** (everything after the closing `---`), computed immediately after the note is written. Never updated. Lint recomputes the body hash and compares against this to detect post-ingest edits to the immutable source note. These are two different texts — `source_hash` and `note_hash` will never match each other, and that's correct.
 - `primary: false` — set `true` for authoritative singletons (government publications, official plan documents, canonical specs). `primary: true` sources bypass the 2-source rule for concept promotion.
+
+To compute the body hash (same command at ingest and lint time):
+```bash
+awk '/^---$/{if(++n==2){found=1;next}} found{print}' <file> | shasum -a 256
+```
 
 Body:
 
@@ -136,7 +143,13 @@ related:
 ```
 
 - `sources:` — YAML list of wikilinks to the source notes the concept synthesises
-- `related:` — YAML list of `{page, rel}` objects. Minimum 2 entries (or note in body why concept is an island). `rel` must be one of: `extends`, `contradicts`, `supersedes`, `see-also`. Use `contradicts` when sources genuinely disagree — do not collapse the tension.
+- `related:` — YAML list of `{page, rel}` objects. Minimum 2 entries (or note in body why concept is an island).
+
+Picking `rel` values (the only valid vocabulary):
+- `extends` — this concept builds on or deepens the related one
+- `contradicts` — core claim is in genuine tension with the related one; name the disagreement explicitly in the body under a **Tensions** subheading. Do not collapse the tension into one reading.
+- `supersedes` — new evidence renders the related concept obsolete; note it in the log
+- `see-also` — real relationship that doesn't fit the above (use as default)
 
 Body: `What it is` > `Why it matters` > `Key points` > `Evidence across sources` > `Open questions` > `Prompts`.
 

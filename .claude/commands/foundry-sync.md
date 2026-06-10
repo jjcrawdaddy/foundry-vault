@@ -1,3 +1,8 @@
+---
+description: Pull foundry-tagged bookmarks from Linkding into the inbox
+model: haiku
+---
+
 Pull queued bookmarks from Linkding into the Foundry inbox.
 
 **Before doing anything**, read `CLAUDE.md` for the full rules of engagement, including the Linkding integration config.

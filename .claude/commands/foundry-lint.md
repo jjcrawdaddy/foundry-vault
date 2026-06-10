@@ -1,3 +1,9 @@
+---
+description: Health-check the vault — structure, links, hashes, integrations
+argument-hint: [--dry-run]
+model: haiku
+---
+
 Health-check the Foundry vault.
 
 **Before doing anything**, read `CLAUDE.md` at the vault root for the full rules of engagement.
@@ -20,17 +26,13 @@ Count and report:
 
 #### 2. Front-matter validation
 
-Every `.md` file in `sources/` and `wiki/` (except `_meta/`) must have valid YAML frontmatter with `---` delimiters, containing:
-- `tags:` — YAML list including exactly one `type/...` entry (`type/source`, `type/concept`, `type/query`, or `type/person`)
-- `tags:` — at least one `area/...` entry
-- `tags:` — at least one `keyword/...` entry (empty is a warning, not an error)
-- `date_created:` — ISO date string (e.g. `2026-04-13`; no `[[` wikilink wrapping)
+Validate every `.md` file in `sources/` and `wiki/` (except `_meta/`) against the frontmatter schema defined in CLAUDE.md (the Front-matter section) — required fields per note type, valid YAML, correct field formats.
 
-Additional required fields by type:
-- **source**: `source:` (URL or reference), `source_hash:` (any value — absence is an error), `primary:` (bool)
-- **concept**: `sources:` (YAML list with at least one `[[...]]` entry), `related:` (YAML list — empty `[]` is flagged in Orphans)
-- **query**: `question:` (string)
-- **person**: body must contain `**Sources in the Foundry**` and `**Concepts they inform**` sections
+Severity notes:
+- Missing `keyword/...` tag: warning, not error
+- Missing `source_hash:` or `note_hash:` on a source: error (any value including `sha256:pending` is acceptable — only absence is flagged)
+- Empty `related: []` on a concept: flagged in Orphans, not here
+- Person pages: body must contain `**Sources in the Foundry**` and `**Concepts they inform**` sections
 
 Report any file missing required fields or with malformed YAML frontmatter.
 
@@ -71,24 +73,28 @@ Don't duplicate the full candidates list — just flag the ones that need action
 - **Unregistered keywords**: `keyword/...` tags used in file frontmatter `tags:` list but not listed in the Keywords section of `index.md`.
 - **Phantom keywords**: keywords listed in `index.md` but never used in any file's `tags:` list.
 
-#### 8. Source hash drift
+#### 8. Note hash drift
 
-For every file in `sources/`:
-1. Read `source_hash:` from YAML frontmatter.
-2. If the field is **absent entirely**: flag as **Hash field absent** (error).
-3. If the value is `sha256:pending`: flag as **Hash not computed** (warning — source predates provenance tracking).
+For every file in `sources/`, validate the **`note_hash:`** field (NOT `source_hash:` — that is the raw-content fingerprint used by ingest idempotency, and it will never match the note body. See CLAUDE.md for the two fields' distinct roles.):
+
+1. Read `note_hash:` from YAML frontmatter.
+2. If the field is **absent entirely**: flag as **note_hash absent** (error).
+3. If the value is `sha256:pending`: flag as **note_hash not computed** (warning — note predates drift tracking, or ingest failed to finalise it).
 4. If the value is `sha256:<hexdigest>`: re-compute SHA-256 of the note body (everything after the closing `---` of the frontmatter). Use:
    ```bash
    awk '/^---$/{if(++n==2){found=1;next}} found{print}' <file> | shasum -a 256
    ```
-   If the recomputed digest does not match the stored hash, flag as **Hash mismatch** (error) — the immutable source note body has been edited since ingest.
+   If the recomputed digest does not match the stored `note_hash`, flag as **Note drift** (error) — the immutable source note body has been edited since ingest.
+
+Also check `source_hash:` for absence or `sha256:pending` (same severities), but never compare it against the body.
 
 Report format (one line per issue):
-- `[[Source Title]]` — Hash field absent
-- `[[Source Title]]` — Hash not computed (pending)
-- `[[Source Title]]` — Hash mismatch: stored `sha256:abc123`, body now hashes to `sha256:def456`
+- `[[Source Title]]` — note_hash absent
+- `[[Source Title]]` — note_hash not computed (pending)
+- `[[Source Title]]` — Note drift: stored `sha256:abc123`, body now hashes to `sha256:def456`
+- `[[Source Title]]` — source_hash absent / pending
 
-A mismatch is not automatically wrong (you may have corrected a transcription error), but it must be visible. Do not auto-fix — only report.
+Note drift is not automatically wrong (you may have corrected a transcription error), but it must be visible. Do not auto-fix — only report.
 
 #### 9. Typed relation vocabulary
 
@@ -196,7 +202,7 @@ End the Stats section with `- **Last lint run:** YYYY-MM-DD` using today's date.
 The report must include sections for all 12 checks. Sections 8–12 template:
 
 ```
-#### 8. Source hash drift
+#### 8. Note hash drift
 - _(clean)_
 
 #### 9. Typed relation vocabulary
@@ -221,7 +227,7 @@ Append to `wiki/_meta/log.md`:
 - Sources: N, Concepts: N, Queries: N, People: N
 - Orphans: N, Broken links: N, Index issues: N
 - Keyword drift flags: N
-- Hash drift: N (pending: N, mismatch: N)
+- Note hash drift: N (pending: N, drift: N)
 - Relation vocab violations: N
 - Citation integrity failures: N
 - Linkding: <reachable / not configured / error>

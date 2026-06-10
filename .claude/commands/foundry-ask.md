@@ -1,3 +1,9 @@
+---
+description: Research a question across the vault, write a cited report
+argument-hint: [the research question]
+model: sonnet
+---
+
 Answer a research question using the Foundry vault, with read-only access to any companion vault configured in CLAUDE.md.
 
 **Before doing anything**, read `CLAUDE.md` at the vault root for the full rules of engagement.
@@ -24,11 +30,11 @@ If `$ARGUMENTS` is empty, open `wiki/_meta/index.md` and pick the oldest entry i
    - Prior query reports in `wiki/` (tags contains `type/query`) — queries compound.
    - The companion vault (if configured) — the author's own first-person writing. Read-only.
 
-2. **Cite every claim.** Every factual or interpretive sentence in the answer must trace back to a specific note via `[[Title]]` or `[[VaultName/Path/Title]]` wikilinks. If a claim has no source, either find one or drop it — don't invent evidence.
+3. **Cite every claim.** Every factual or interpretive sentence in the answer must trace back to a specific note via `[[Title]]` or `[[VaultName/Path/Title]]` wikilinks. If a claim has no source, either find one or drop it — don't invent evidence.
 
-3. **Paraphrase the companion vault, never copy.** If a companion-vault note informs the answer, attribute it (*"In a note on X, the author argues…"*) and rewrite in your own words.
+4. **Paraphrase the companion vault, never copy.** If a companion-vault note informs the answer, attribute it (*"In a note on X, the author argues…"*) and rewrite in your own words.
 
-4. **Hold tensions explicitly.** When sources disagree, name the disagreement rather than collapsing it. Honest signal matters more than a clean answer.
+5. **Hold tensions explicitly.** When sources disagree, name the disagreement rather than collapsing it. Honest signal matters more than a clean answer.
 
 ### Output
 
